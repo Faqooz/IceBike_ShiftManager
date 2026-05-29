@@ -12,6 +12,15 @@ import { InlineAlert } from "@/components/ui/InlineAlert";
 import { ShiftForm } from "@/components/shared/ShiftForm";
 import type { ShiftFormValues, Kiosk } from "@/types";
 
+function addDays(dateStr: string, days: number) {
+  const d = new Date(dateStr);
+  d.setDate(d.getDate() + days);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 export default function NewShiftPage() {
   const isManager = useIsManager();
   const router = useRouter();
@@ -44,15 +53,6 @@ export default function NewShiftPage() {
   async function handleSubmit(values: ShiftFormValues) {
     setSubmitError(null);
     try {
-      function addDays(dateStr: string, days: number) {
-        const d = new Date(dateStr);
-        d.setDate(d.getDate() + days);
-        const yyyy = d.getFullYear();
-        const mm = String(d.getMonth() + 1).padStart(2, "0");
-        const dd = String(d.getDate()).padStart(2, "0");
-        return `${yyyy}-${mm}-${dd}`;
-      }
-
       let firstShift: any = null;
       const occurrences = Math.max(1, values.occurrences ?? 1);
       const step = values.recurrence === "weekly" ? 7 : 1;
