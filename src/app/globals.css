@@ -1,0 +1,112 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=DM+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,600..700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-body: 'DM Sans', system-ui, sans-serif;
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-mono: 'DM Mono', monospace;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-surface text-ink;
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    font-style: italic;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-surface-muted rounded-full;
+  }
+}
+
+@layer components {
+  /* Input base style */
+  .input-base {
+    @apply w-full bg-surface-overlay border border-surface-border rounded-md px-3 py-2
+           text-ink text-sm placeholder:text-ink-faint
+           focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-400
+           disabled:opacity-50 disabled:cursor-not-allowed
+           transition-colors duration-150;
+  }
+
+  /* Button variants */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md
+           bg-brand-600 hover:bg-brand-500 active:bg-brand-700
+           text-white text-sm font-medium
+           transition-colors duration-150
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md
+           bg-surface-overlay hover:bg-surface-raised border border-surface-border
+           text-ink text-sm font-medium
+           transition-colors duration-150
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md
+           bg-red-600 hover:bg-red-500 active:bg-red-700
+           text-white text-sm font-medium
+           transition-colors duration-150
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded
+           text-ink-muted hover:text-ink hover:bg-surface-overlay
+           text-sm font-medium
+           transition-colors duration-150
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Card */
+  .card {
+    @apply bg-surface-raised border border-surface-border rounded-lg p-4;
+  }
+
+  /* Divider */
+  .divider {
+    @apply border-t border-surface-border;
+  }
+
+  /* Label */
+  .form-label {
+    @apply block text-xs font-medium text-ink-muted uppercase tracking-wider mb-1.5;
+  }
+
+  /* Error text */
+  .form-error {
+    @apply text-xs text-red-400 mt-1;
+  }
+}
