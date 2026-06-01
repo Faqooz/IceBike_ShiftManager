@@ -126,6 +126,27 @@ export async function createShift(
   return data as Shift;
 }
 
+export async function directAssignShift(
+  supabase: SupabaseClient,
+  kioskId: string,
+  startAt: string,
+  endAt: string,
+  capacity: number,
+  notes: string,
+  employeeId: string
+): Promise<Shift> {
+  const { data, error } = await supabase.rpc("direct_assign_shift", {
+    p_kiosk_id: kioskId,
+    p_start_at: startAt,
+    p_end_at: endAt,
+    p_capacity: capacity,
+    p_notes: notes,
+    p_employee_id: employeeId,
+  });
+  if (error) throw error;
+  return data as Shift;
+}
+
 export async function updateShift(
   supabase: SupabaseClient,
   shiftId: string,
