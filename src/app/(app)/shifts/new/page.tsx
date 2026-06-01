@@ -4,13 +4,14 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useIsManager } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/client";
-import { createShift, getKiosks } from "@/lib/supabase/queries";
+import { createShift, getKiosks, getAllProfiles } from "@/lib/supabase/queries";
+import { directAssignShift } from "@/lib/supabase/queries";
 import { localToUtc, extractErrorMessage } from "@/lib/utils";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { LoadingState, ErrorState } from "@/components/ui/States";
 import { InlineAlert } from "@/components/ui/InlineAlert";
 import { ShiftForm } from "@/components/shared/ShiftForm";
-import type { ShiftFormValues, Kiosk } from "@/types";
+import type { ShiftFormValues, Kiosk, Profile } from "@/types";
 
 function addDays(dateStr: string, days: number) {
   const d = new Date(dateStr);
@@ -27,13 +28,17 @@ export default function NewShiftPage() {
   const supabase = createClient();
 
   const [kiosks, setKiosks] = useState<Kiosk[]>([]);
+  const [employees, setEmployees] = useState<Profile[]>([]);
   const [loadingKiosks, setLoadingKiosks] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
-    getKiosks(supabase)
-      .then(setKiosks)
+    Promise.all([getKiosks(supabase), getAllProfiles(supabase)])
+      .then(([k, profiles]) => {
+        setKiosks(k);
+        setEmployees(profiles.filter((p) => p.role === "employee") as Profile[]);
+      })
       .catch((e) => setLoadError(extractErrorMessage(e)))
       .finally(() => setLoadingKiosks(false));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -53,22 +58,35 @@ export default function NewShiftPage() {
   async function handleSubmit(values: ShiftFormValues) {
     setSubmitError(null);
     try {
-      let firstShift: any = null;
+      let firstShift = null;
       const occurrences = Math.max(1, values.occurrences ?? 1);
       const step = values.recurrence === "weekly" ? 7 : 1;
+      const employeeId = values.assign_employee_id || null;
 
       for (let i = 0; i < occurrences; i++) {
         const day = addDays(values.date, i * step);
         const startLocal = `${day}T${values.start_time}`;
         const endLocal = `${day}T${values.end_time}`;
-        const shift = await createShift(
-          supabase,
-          values.kiosk_id,
-          localToUtc(startLocal),
-          localToUtc(endLocal),
-          values.capacity,
-          values.notes
-        );
+
+        const shift = employeeId
+          ? await directAssignShift(
+              supabase,
+              values.kiosk_id,
+              localToUtc(startLocal),
+              localToUtc(endLocal),
+              values.capacity,
+              values.notes,
+              employeeId
+            )
+          : await createShift(
+              supabase,
+              values.kiosk_id,
+              localToUtc(startLocal),
+              localToUtc(endLocal),
+              values.capacity,
+              values.notes
+            );
+
         if (!firstShift) firstShift = shift;
       }
 
@@ -92,6 +110,7 @@ export default function NewShiftPage() {
       <div className="card">
         <ShiftForm
           kiosks={kiosks}
+          employees={employees}
           onSubmit={handleSubmit}
           submitLabel="Create draft shift"
         />
