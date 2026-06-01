@@ -10,6 +10,11 @@ interface ShiftCardProps {
   requestStatus?: "pending" | "approved" | "rejected" | "cancelled" | null;
 }
 
+function getWeekday(dateStr: string) {
+  const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  return days[new Date(dateStr).getDay()];
+}
+
 export function ShiftCard({
   shift,
   pendingCount,
@@ -21,7 +26,10 @@ export function ShiftCard({
       <div className="card hover:border-surface-muted transition-colors duration-150 space-y-3">
         {/* Top row */}
         <div className="flex items-start justify-between gap-2">
-          <TimeRange startAt={shift.start_at} endAt={shift.end_at} />
+          <div className="flex items-center gap-2">
+            <TimeRange startAt={shift.start_at} endAt={shift.end_at} />
+            <span className="text-xs text-ink-faint">({getWeekday(shift.start_at)})</span>
+          </div>
           <ShiftStatusBadge status={shift.status} />
         </div>
 
