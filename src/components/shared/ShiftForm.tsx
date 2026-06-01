@@ -3,30 +3,30 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import type { ShiftFormValues, Kiosk, ShiftWithKiosk } from "@/types";
+import type { ShiftFormValues, Kiosk, ShiftWithKiosk, Profile } from "@/types";
 import { utcToLocalInput } from "@/lib/utils";
 
 const schema = z
   .object({
     kiosk_id: z.string().min(1, "Please select a kiosk"),
     date: z.string().min(1, "Date is required"),
-      start_time: z.string().min(1, "Start time is required"),
-      end_time: z.string().min(1, "End time is required"),
+    start_time: z.string().min(1, "Start time is required"),
+    end_time: z.string().min(1, "End time is required"),
     capacity: z.coerce.number().int().min(1, "Capacity must be at least 1"),
     notes: z.string(),
+    assign_employee_id: z.string().optional(),
   })
   .refine((d) => {
     try {
       const start = new Date(`${d.date}T${d.start_time}`);
       const end = new Date(`${d.date}T${d.end_time}`);
       if (!(end > start)) return false;
-      // enforce earliest start 08:00 and latest end 20:00
       const [sh, sm] = d.start_time.split(":").map(Number);
       const [eh, em] = d.end_time.split(":").map(Number);
       const startMinutes = sh * 60 + sm;
       const endMinutes = eh * 60 + em;
-      const earliest = 8 * 60; // 08:00
-      const latest = 20 * 60; // 20:00
+      const earliest = 8 * 60;
+      const latest = 20 * 60;
       return startMinutes >= earliest && endMinutes <= latest;
     } catch (e) {
       return false;
@@ -38,6 +38,7 @@ const schema = z
 
 interface ShiftFormProps {
   kiosks: Kiosk[];
+  employees?: Profile[];
   defaultKioskId?: string;
   existing?: ShiftWithKiosk;
   onSubmit: (values: ShiftFormValues) => Promise<void>;
@@ -47,6 +48,7 @@ interface ShiftFormProps {
 
 export function ShiftForm({
   kiosks,
+  employees,
   defaultKioskId,
   existing,
   onSubmit,
@@ -69,6 +71,7 @@ export function ShiftForm({
           notes: existing.notes ?? "",
           recurrence: "none",
           occurrences: 1,
+          assign_employee_id: "",
         }
       : {
           kiosk_id: defaultKioskId ?? "",
@@ -79,6 +82,7 @@ export function ShiftForm({
           notes: "",
           recurrence: "none",
           occurrences: 1,
+          assign_employee_id: "",
         },
   });
 
@@ -144,6 +148,21 @@ export function ShiftForm({
         <div />
       </div>
 
+      {/* Assign Employee (only when creating, not editing) */}
+      {!existing && employees && employees.length > 0 && (
+        <div>
+          <label className="form-label">Assign Employee (optional)</label>
+          <select {...register("assign_employee_id")} className="input-base" disabled={busy}>
+            <option value="">No assignment</option>
+            {employees.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.full_name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
       {/* Capacity */}
       <div>
         <label className="form-label">Capacity</label>
@@ -188,19 +207,19 @@ export function ShiftForm({
   );
 }
 
-  function generateTimeOptions() {
-    const options = [] as JSX.Element[];
-    for (let h = 0; h < 24; h++) {
-      for (let m = 0; m < 60; m += 15) {
-        const hh = String(h).padStart(2, "0");
-        const mm = String(m).padStart(2, "0");
-        const v = `${hh}:${mm}`;
-        options.push(
-          <option key={v} value={v}>
-            {v}
-          </option>
-        );
-      }
+function generateTimeOptions() {
+  const options = [] as JSX.Element[];
+  for (let h = 0; h < 24; h++) {
+    for (let m = 0; m < 60; m += 15) {
+      const hh = String(h).padStart(2, "0");
+      const mm = String(m).padStart(2, "0");
+      const v = `${hh}:${mm}`;
+      options.push(
+        <option key={v} value={v}>
+          {v}
+        </option>
+      );
     }
-    return options;
   }
+  return options;
+}
