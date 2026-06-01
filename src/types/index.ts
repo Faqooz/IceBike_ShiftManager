@@ -115,6 +115,7 @@ export interface ShiftFormValues {
   notes: string;
   recurrence: "none" | "daily" | "weekly";
   occurrences: number;
+  assign_employee_id?: string;
 }
 
 export interface ProfileFormValues {
