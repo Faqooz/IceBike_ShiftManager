@@ -16,6 +16,32 @@ import type { ShiftAssignmentWithDetails, Profile, Kiosk } from "@/types";
 
 type ProfileWithKiosk = Profile & { kiosks: Pick<Kiosk, "id" | "city_name"> | null };
 
+function exportCSV(assignments: ShiftAssignmentWithDetails[]) {
+  const rows = [
+    ["Employee", "Date", "Weekday", "Start", "End", "Hours"],
+    ...assignments.map((a) => {
+      const start = new Date(a.start_at);
+      const end = new Date(a.end_at);
+      const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+      const date = start.toLocaleDateString("fi-FI");
+      const weekday = days[start.getDay()];
+      const startTime = start.toLocaleTimeString("fi-FI", { hour: "2-digit", minute: "2-digit" });
+      const endTime = end.toLocaleTimeString("fi-FI", { hour: "2-digit", minute: "2-digit" });
+      const hours = ((end.getTime() - start.getTime()) / 3600000).toFixed(2);
+      return [a.profiles.full_name, date, weekday, startTime, endTime, hours];
+    }),
+  ];
+
+  const csv = rows.map((r) => r.join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "hours_export.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export default function HoursPage() {
   const { profile } = useAuth();
   const isManager = useIsManager();
@@ -85,7 +111,18 @@ export default function HoursPage() {
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Hours" subtitle="All approved assignments" />
+      <PageHeader
+        title="Hours"
+        subtitle="All approved assignments"
+        action={
+          <button
+            onClick={() => exportCSV(filteredAssignments)}
+            className="btn-primary"
+          >
+            Export CSV
+          </button>
+        }
+      />
 
       {/* Summary table */}
       {Object.keys(hoursByEmployee).length > 0 && (
